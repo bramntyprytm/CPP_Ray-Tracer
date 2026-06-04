@@ -1,6 +1,11 @@
+#ifdef __APPLE__
 #define GL_SILENCE_DEPRECATION
 #include <OpenGL/gl3.h>
 #include <GLFW/glfw3.h>
+#else
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+#endif
 
 #include <sstream>
 #include <iomanip>
@@ -472,6 +477,16 @@ int main() {
     }
 
     glfwMakeContextCurrent(window);
+
+    #ifndef __APPLE__
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+        std::cerr << "Failed to initialise GLAD\n";
+        glfwDestroyWindow(window);
+        glfwTerminate();
+        return 1;
+    }
+    #endif
+
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -538,12 +553,32 @@ int main() {
         0.35
     );
 
+    const double cow_scale = 0.001;
+    const double cow_x = 0.0;
+    const double cow_y = -0.5;
+
     load_obj_as_triangles(
         "../models/cow.obj",
         scene,
         cow_material,
-        0.4,
-        Vec3(0.0, -0.5, -2.5)
+        cow_scale,
+        Vec3(cow_x, cow_y, -1.6)
+    );
+
+    load_obj_as_triangles(
+        "../models/cow.obj",
+        scene,
+        cow_material,
+        cow_scale,
+        Vec3(cow_x, cow_y, -2.3)
+    );
+
+    load_obj_as_triangles(
+        "../models/cow.obj",
+        scene,
+        cow_material,
+        cow_scale,
+        Vec3(cow_x, cow_y, -3.0)
     );
 
     std::cout << "GPU preview cow triangles: "

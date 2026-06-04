@@ -6,6 +6,8 @@
 #include "ray.h"
 #include "vec3.h"
 
+constexpr double PI = 3.14159265358979323846;
+
 struct Camera {
     Vec3 position;
     double yaw;
@@ -21,8 +23,8 @@ struct Camera {
           aspect_ratio(16.0 / 9.0) {}
 
     Vec3 forward() const {
-        double yaw_rad = yaw * M_PI / 180.0;
-        double pitch_rad = pitch * M_PI / 180.0;
+        double yaw_rad = yaw * PI / 180.0;
+        double pitch_rad = pitch * PI / 180.0;
 
         Vec3 direction;
         direction.x = std::cos(yaw_rad) * std::cos(pitch_rad);
@@ -46,7 +48,7 @@ struct Camera {
         Vec3 r = right();
         Vec3 uvec = up();
 
-        double theta = fov_degrees * M_PI / 180.0;
+        double theta = fov_degrees * PI / 180.0;
         double viewport_height = 2.0 * std::tan(theta / 2.0);
         double viewport_width = aspect_ratio * viewport_height;
 

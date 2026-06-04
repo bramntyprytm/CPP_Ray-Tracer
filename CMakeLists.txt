@@ -17,21 +17,25 @@ target_include_directories(raytracer PRIVATE
 )
 
 # ---------------- Interactive SDL preview ----------------
+# Optional. This is useful on macOS, but not required for the RTX/OpenGL path.
 
-find_package(SDL2 REQUIRED)
+find_package(SDL2 QUIET)
 
-add_executable(interactive
-    src/interactive.cpp
-)
+if (SDL2_FOUND)
+    add_executable(interactive
+        src/interactive.cpp
+    )
 
-target_include_directories(interactive PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/src
-    ${SDL2_INCLUDE_DIRS}
-)
+    target_include_directories(interactive PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
+        ${SDL2_INCLUDE_DIRS}
+    )
 
-target_link_libraries(interactive PRIVATE
-    ${SDL2_LIBRARIES}
-)
+    target_link_libraries(interactive PRIVATE
+        ${SDL2_LIBRARIES})
+else()
+    message(STATUS "SDL2 not found; skipping interactive SDL preview.")
+endif()
 
 # ---------------- GPU / OpenGL preview ----------------
 
@@ -46,10 +50,12 @@ FetchContent_MakeAvailable(glfw)
 
 add_executable(gpu_preview
     src/gpu/gpu_preview.cpp
+    external/glad/src/glad.c
 )
 
 target_include_directories(gpu_preview PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/external/glad/include
 )
 
 target_link_libraries(gpu_preview PRIVATE
@@ -73,10 +79,16 @@ endif()
 
 if (MSVC)
     target_compile_options(raytracer PRIVATE /W4)
-    target_compile_options(interactive PRIVATE /W4)
     target_compile_options(gpu_preview PRIVATE /W4)
+
+    if (SDL2_FOUND)
+        target_compile_options(interactive PRIVATE /W4)
+    endif()
 else()
     target_compile_options(raytracer PRIVATE -Wall -Wextra)
-    target_compile_options(interactive PRIVATE -Wall -Wextra)
     target_compile_options(gpu_preview PRIVATE -Wall -Wextra)
+
+    if (SDL2_FOUND)
+        target_compile_options(interactive PRIVATE -Wall -Wextra)
+    endif()
 endif()

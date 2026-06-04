@@ -1,6 +1,7 @@
 build/
 renders/
 __MACOSX/
+.vs
 .DS_Store
 *.o
 *.exe
