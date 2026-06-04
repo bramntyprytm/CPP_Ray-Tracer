@@ -1,0 +1,8 @@
+build/
+renders/
+__MACOSX/
+.DS_Store
+*.o
+*.exe
+interactive
+raytracer
