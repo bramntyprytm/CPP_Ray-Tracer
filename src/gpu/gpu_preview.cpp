@@ -470,7 +470,7 @@ bool save_framebuffer_ppm(GLFWwindow* window, const fs::path& output_path) {
         out.write(reinterpret_cast<const char*>(row), std::streamsize(width) * 3);
     }
 
-    std::cout << "Saved GPU report screenshot: " << fs::absolute(output_path) << "\n";
+    std::cout << "Saved GPU render screenshot: " << fs::absolute(output_path) << "\n";
     return true;
 }
 

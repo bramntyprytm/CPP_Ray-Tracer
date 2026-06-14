@@ -355,10 +355,10 @@ static void write_benchmark_csv(const std::vector<BenchmarkResult>& results) {
     }
 }
 
-static void write_report_manifest() {
-    fs::path manifest_path = render_directory() / "REPORT_ASSETS.txt";
+static void write_render_manifest() {
+    fs::path manifest_path = render_directory() / "RENDER_ASSETS.txt";
     std::ofstream out = open_output_file(manifest_path);
-    out << "Generated CPU report assets\n"
+    out << "Generated CPU render assets\n"
         << "===========================\n"
         << "gradient.ppm\n"
         << "sphere_normals.ppm\n"
@@ -377,7 +377,7 @@ static void write_report_manifest() {
         << "The GPU screenshot gpu_three_cows.ppm is created by pressing P in gpu_preview.\n";
 }
 
-static void run_report_suite(bool final_quality) {
+static void run_render_suite(bool final_quality) {
     const RenderSettings quick = final_quality
         ? RenderSettings{800, 450, 4, 4}
         : RenderSettings{400, 225, 1, 2};
@@ -432,7 +432,7 @@ static void run_report_suite(bool final_quality) {
         if (!add_cow(scene, Vec3(0.0, -0.5, -1.6), 0.001, 0.10) ||
             !add_cow(scene, Vec3(0.0, -0.5, -2.3), 0.001, 0.10) ||
             !add_cow(scene, Vec3(0.0, -0.5, -3.0), 0.001, 0.10)) {
-            throw std::runtime_error("Could not create the three-cow report scene.");
+            throw std::runtime_error("Could not create the three-cow render scene.");
         }
         scene.build_triangle_bvh();
         scene.set_use_bvh(true);
@@ -440,9 +440,9 @@ static void run_report_suite(bool final_quality) {
     }
 
     write_benchmark_csv({benchmark_cow(benchmark_settings)});
-    write_report_manifest();
+    write_render_manifest();
 
-    std::cout << "\nReport suite completed.\n"
+    std::cout << "\nRender suite completed.\n"
               << "PPM files: " << fs::absolute(render_directory()) << "\n"
               << "Next: run tools/convert_ppm_to_png.py\n";
 }
@@ -450,8 +450,8 @@ static void run_report_suite(bool final_quality) {
 static void print_usage(const char* executable) {
     std::cout
         << "Usage:\n"
-        << "  " << executable << "              Generate higher-quality report assets\n"
-        << "  " << executable << " --fast       Generate report assets quickly\n"
+        << "  " << executable << "              Generate higher-quality render assets\n"
+        << "  " << executable << " --fast       Generate render assets quickly\n"
         << "  " << executable << " --benchmark  Generate cow naive/BVH timing files only\n";
 }
 
@@ -463,9 +463,9 @@ int main(int argc, char** argv) {
         std::cout << "Render folder: " << fs::absolute(render_directory()) << "\n";
 
         if (argc == 1) {
-            run_report_suite(true);
+            run_render_suite(true);
         } else if (argc == 2 && std::string(argv[1]) == "--fast") {
-            run_report_suite(false);
+            run_render_suite(false);
         } else if (argc == 2 && std::string(argv[1]) == "--benchmark") {
             write_benchmark_csv({benchmark_cow(RenderSettings{400, 225, 1, 2})});
         } else {
