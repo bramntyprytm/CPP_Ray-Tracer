@@ -212,7 +212,7 @@ static Material make_cow(double reflectivity = 0.05) {
     return Material(Vec3(0.75, 0.75, 0.75), 0.15, 1.0, 0.55, 64.0, reflectivity);
 }
 
-static void add_debug_spheres(Scene& scene, bool reflective) {
+static void add_sphere_scene(Scene& scene, bool reflective) {
     scene.add_sphere(Sphere(Vec3(0, 0, -1), 0.5, make_red(reflective ? 0.15 : 0.0)));
     scene.add_sphere(Sphere(Vec3(-1.0, 0, -1.5), 0.5, make_blue(reflective ? 0.25 : 0.0)));
     scene.add_sphere(Sphere(Vec3(1.0, 0, -1.5), 0.5, make_green(reflective ? 0.10 : 0.0)));
@@ -367,7 +367,6 @@ static void write_report_manifest() {
         << "comparison_1spp.ppm\n"
         << "comparison_16spp.ppm\n"
         << "cow_cpu_render.ppm\n"
-        << "debug_spheres.ppm\n"
         << "cow_mesh.ppm\n"
         << "reflection_scene.ppm\n"
         << "complex_model.ppm (three-cow stress scene)\n"
@@ -395,14 +394,13 @@ static void run_report_suite(bool final_quality) {
 
     {
         Scene scene;
-        add_debug_spheres(scene, false);
+        add_sphere_scene(scene, false);
         render_scene(render_directory() / "specular_spheres.ppm", scene, camera, quick);
-        render_scene(render_directory() / "debug_spheres.ppm", scene, camera, quick);
     }
 
     {
         Scene scene;
-        add_debug_spheres(scene, true);
+        add_sphere_scene(scene, true);
         render_scene(render_directory() / "reflection_spheres.ppm", scene, camera, quick);
 
         RenderSettings one_sample = quick;
@@ -441,9 +439,7 @@ static void run_report_suite(bool final_quality) {
         render_scene(render_directory() / "complex_model.ppm", scene, camera, quick);
     }
 
-    std::vector<BenchmarkResult> benchmarks;
-    benchmarks.push_back(benchmark_cow(benchmark_settings));
-    write_benchmark_csv(benchmarks);
+    write_benchmark_csv({benchmark_cow(benchmark_settings)});
     write_report_manifest();
 
     std::cout << "\nReport suite completed.\n"
@@ -454,9 +450,9 @@ static void run_report_suite(bool final_quality) {
 static void print_usage(const char* executable) {
     std::cout
         << "Usage:\n"
-        << "  " << executable << " --report-fast   Generate all report assets quickly\n"
-        << "  " << executable << " --report-final  Generate higher-quality report assets\n"
-        << "  " << executable << " --benchmark     Generate cow naive/BVH timing files only\n";
+        << "  " << executable << "              Generate higher-quality report assets\n"
+        << "  " << executable << " --fast       Generate report assets quickly\n"
+        << "  " << executable << " --benchmark  Generate cow naive/BVH timing files only\n";
 }
 
 int main(int argc, char** argv) {
@@ -466,20 +462,12 @@ int main(int argc, char** argv) {
         std::cout << "Project root: " << fs::absolute(project_root()) << "\n";
         std::cout << "Render folder: " << fs::absolute(render_directory()) << "\n";
 
-        if (argc < 2) {
-            print_usage(argv[0]);
-            return 0;
-        }
-
-        const std::string mode = argv[1];
-        if (mode == "--report-fast") {
-            run_report_suite(false);
-        } else if (mode == "--report-final") {
+        if (argc == 1) {
             run_report_suite(true);
-        } else if (mode == "--benchmark") {
-            std::vector<BenchmarkResult> benchmarks;
-            benchmarks.push_back(benchmark_cow(RenderSettings{400, 225, 1, 2}));
-            write_benchmark_csv(benchmarks);
+        } else if (argc == 2 && std::string(argv[1]) == "--fast") {
+            run_report_suite(false);
+        } else if (argc == 2 && std::string(argv[1]) == "--benchmark") {
+            write_benchmark_csv({benchmark_cow(RenderSettings{400, 225, 1, 2})});
         } else {
             print_usage(argv[0]);
             return 1;

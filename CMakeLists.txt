@@ -6,8 +6,6 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# ---------------- Offline CPU renderer ----------------
-
 add_executable(raytracer
     src/main.cpp
 )
@@ -19,8 +17,6 @@ target_include_directories(raytracer PRIVATE
 target_compile_definitions(raytracer PRIVATE
     PROJECT_ROOT_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
 )
-
-# ---------------- Optional SDL CPU preview ----------------
 
 find_package(SDL2 QUIET)
 
@@ -44,8 +40,6 @@ if (SDL2_FOUND)
 else()
     message(STATUS "SDL2 not found; skipping interactive SDL preview.")
 endif()
-
-# ---------------- OpenGL GPU preview ----------------
 
 include(FetchContent)
 
@@ -103,8 +97,6 @@ elseif (WIN32)
 else()
     target_link_libraries(gpu_preview PRIVATE GL)
 endif()
-
-# ---------------- Compiler warnings ----------------
 
 if (MSVC)
     target_compile_options(raytracer PRIVATE /W4)

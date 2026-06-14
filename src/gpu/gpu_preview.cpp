@@ -185,7 +185,6 @@ GLuint create_shader_program() {
             closest.hit = false;
             closest.ground = false;
 
-            // Cow triangles
             for (int i = 0; i < u_triangle_count; i++) {
                 vec3 v0 = get_triangle_vertex(i, 0);
                 vec3 v1 = get_triangle_vertex(i, 1);
@@ -205,7 +204,6 @@ GLuint create_shader_program() {
                 }
             }
 
-            // Reflective ground sphere
             float ground_t = hit_sphere(
                 ray,
                 vec3(0.0, -100.5, -1.0),
@@ -251,7 +249,6 @@ GLuint create_shader_program() {
                 specular_strength = 0.25;
                 shininess = 32.0;
             } else {
-                // Shiny cow material
                 base_colour = vec3(0.85, 0.82, 0.75);
                 ambient = 0.12;
                 diffuse_strength = 1.0;
@@ -297,7 +294,6 @@ GLuint create_shader_program() {
                 return 0.55;
             }
 
-            // Reflective cow
             return 0.25;
         }
 
@@ -414,24 +410,19 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
 GLuint create_triangle_texture_buffer(const Scene& scene, GLuint& triangle_buffer) {
     std::vector<float> data;
 
-    for (const Triangle& tri : scene.triangles) {
-        // v0
-        data.push_back(float(tri.v0.x));
-        data.push_back(float(tri.v0.y));
-        data.push_back(float(tri.v0.z));
-        data.push_back(0.0f);
+    data.reserve(scene.triangles.size() * 12);
 
-        // v1
-        data.push_back(float(tri.v1.x));
-        data.push_back(float(tri.v1.y));
-        data.push_back(float(tri.v1.z));
+    const auto append_vertex = [&data](const Vec3& vertex) {
+        data.push_back(float(vertex.x));
+        data.push_back(float(vertex.y));
+        data.push_back(float(vertex.z));
         data.push_back(0.0f);
+    };
 
-        // v2
-        data.push_back(float(tri.v2.x));
-        data.push_back(float(tri.v2.y));
-        data.push_back(float(tri.v2.z));
-        data.push_back(0.0f);
+    for (const Triangle& triangle : scene.triangles) {
+        append_vertex(triangle.v0);
+        append_vertex(triangle.v1);
+        append_vertex(triangle.v2);
     }
 
     glGenBuffers(1, &triangle_buffer);
