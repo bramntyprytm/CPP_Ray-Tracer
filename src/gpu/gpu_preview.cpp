@@ -10,12 +10,21 @@
 #include <sstream>
 #include <iomanip>
 #include <cmath>
+#include <filesystem>
+#include <fstream>
 #include <iostream>
+#include <vector>
 
 #include "camera.h"
 #include "obj_loader.h"
 #include "scene.h"
 #include "vec3.h"
+
+namespace fs = std::filesystem;
+
+#ifndef PROJECT_ROOT_DIR
+#define PROJECT_ROOT_DIR "."
+#endif
 
 bool first_mouse = true;
 double last_mouse_x = 0.0;
@@ -442,6 +451,38 @@ GLuint create_triangle_texture_buffer(const Scene& scene, GLuint& triangle_buffe
     return triangle_texture;
 }
 
+bool save_framebuffer_ppm(GLFWwindow* window, const fs::path& output_path) {
+    int width = 0;
+    int height = 0;
+    glfwGetFramebufferSize(window, &width, &height);
+
+    if (width <= 0 || height <= 0) {
+        std::cerr << "Cannot save screenshot: invalid framebuffer size.\n";
+        return false;
+    }
+
+    std::vector<unsigned char> pixels(std::size_t(width) * std::size_t(height) * 3);
+    glPixelStorei(GL_PACK_ALIGNMENT, 1);
+    glReadBuffer(GL_BACK);
+    glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, pixels.data());
+
+    fs::create_directories(output_path.parent_path());
+    std::ofstream out(output_path, std::ios::binary);
+    if (!out.is_open()) {
+        std::cerr << "Could not save screenshot: " << output_path << "\n";
+        return false;
+    }
+
+    out << "P6\n" << width << " " << height << "\n255\n";
+    for (int y = height - 1; y >= 0; --y) {
+        const unsigned char* row = pixels.data() + std::size_t(y) * std::size_t(width) * 3;
+        out.write(reinterpret_cast<const char*>(row), std::streamsize(width) * 3);
+    }
+
+    std::cout << "Saved GPU report screenshot: " << fs::absolute(output_path) << "\n";
+    return true;
+}
+
 int main() {
     if (!glfwInit()) {
         std::cerr << "Failed to initialise GLFW\n";
@@ -494,7 +535,7 @@ int main() {
 
     std::cout << "OpenGL version: " << glGetString(GL_VERSION) << "\n";
     std::cout << "Renderer: " << glGetString(GL_RENDERER) << "\n";
-    std::cout << "Controls: W/S/A/D move, Q/E down/up, mouse look, Esc quit\n";
+    std::cout << "Controls: W/S/A/D move, Q/E down/up, mouse look, P screenshot, Esc quit\n";
 
     GLuint shader_program = create_shader_program();
 
@@ -558,7 +599,7 @@ int main() {
     const double cow_y = -0.5;
 
     load_obj_as_triangles(
-        "../models/cow.obj",
+        (fs::path(PROJECT_ROOT_DIR) / "models" / "cow.obj").string(),
         scene,
         cow_material,
         cow_scale,
@@ -566,7 +607,7 @@ int main() {
     );
 
     load_obj_as_triangles(
-        "../models/cow.obj",
+        (fs::path(PROJECT_ROOT_DIR) / "models" / "cow.obj").string(),
         scene,
         cow_material,
         cow_scale,
@@ -574,7 +615,7 @@ int main() {
     );
 
     load_obj_as_triangles(
-        "../models/cow.obj",
+        (fs::path(PROJECT_ROOT_DIR) / "models" / "cow.obj").string(),
         scene,
         cow_material,
         cow_scale,
@@ -588,6 +629,7 @@ int main() {
     GLuint triangle_buffer = 0;
     GLuint triangle_texture = create_triangle_texture_buffer(scene, triangle_buffer);
     int triangle_count = int(scene.triangles.size());
+    bool p_was_down = false;
 
     while (!glfwWindowShouldClose(window)) {
         double current_time = glfwGetTime();
@@ -693,6 +735,15 @@ int main() {
 
         glBindVertexArray(vao);
         glDrawArrays(GL_TRIANGLES, 0, 6);
+
+        bool p_is_down = glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS;
+        if (p_is_down && !p_was_down) {
+            save_framebuffer_ppm(
+                window,
+                fs::path(PROJECT_ROOT_DIR) / "renders" / "gpu_three_cows.ppm"
+            );
+        }
+        p_was_down = p_is_down;
 
         glfwSwapBuffers(window);
         glfwPollEvents();
