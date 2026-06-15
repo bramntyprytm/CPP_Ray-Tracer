@@ -1,6 +1,5 @@
 build/
 renders/
-tools/
 __MACOSX/
 .vs
 .DS_Store
